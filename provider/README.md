@@ -122,7 +122,7 @@ The following keys must be used for pagination links:
 * `prev`: url to the previous page of data
 * `next`: url to the next page of data
 
-At a minimum, paginated payloads must include a `next` key, which must be set to `null` to indicate the last page of data. 
+At a minimum, paginated payloads must include a `next` key, which must be set to `null` to indicate the last page of data.
 
 ```json
 {
@@ -233,10 +233,10 @@ The trips endpoint allows a user to query historical trip data.
 
 Unless stated otherwise by the municipality, the trips endpoint must return all trips with a `route` which [intersects](#intersection-operation) with the [municipality boundary](#municipality-boundary).
 
-Endpoint: `/trips`  
-Method: `GET`  
-Schema: [`trips` schema][trips-schema]  
-`data` Payload: `{ "trips": [] }`, an array of objects with the following structure  
+Endpoint: `/trips`
+Method: `GET`
+Schema: [`trips` schema][trips-schema]
+`data` Payload: `{ "trips": [] }`, an array of objects with the following structure
 
 
 | Field | Type    | Required/Optional | Comments |
@@ -268,11 +268,14 @@ The `/trips` API should allow querying trips with the following query parameters
 | --------------- | ------ | --------------- |
 | `end_time` | `YYYY-MM-DDTHH`, an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) extended datetime representing an UTC hour between 00 and 23. | All trips with an end time occurring within the hour. For example, requesting `end_time=2019-10-01T07` returns all trips where `2019-10-01T07:00:00 <= trip.end_time < 2019-10-01T08:00:00` UTC. |
 
-If the data does not exist or the hour has not completed, `/trips` shall return a `404 Not Found` error.
+For hours that have not yet completed or during which the provider was not operating
+in a municipality `/trips` shall return a `404 Not Found` error.
+`/trips` shall return an empty array of trips for
+hours in which the provider was operating but no events happened.
 
 Without an `end_time` query parameter, `/trips` shall return a `400 Bad Request` error.
 
-For the near-ish real time use cases, please use the [events](#events) endpoint. 
+For the near-ish real time use cases, please use the [events](#events) endpoint.
 
 ### Routes
 
@@ -324,9 +327,9 @@ Unless stated otherwise by the municipality, this endpoint must return only thos
 
 > Note: As a result of this definition, consumers should query the [trips endpoint](#trips) to infer when vehicles enter or leave the municipality boundary.
 
-Endpoint: `/status_changes`  
-Method: `GET`  
-Schema: [`status_changes` schema][sc-schema]  
+Endpoint: `/status_changes`
+Method: `GET`
+Schema: [`status_changes` schema][sc-schema]
 `data` Payload: `{ "status_changes": [] }`, an array of objects with the following structure
 
 | Field | Type | Required/Optional | Comments |
@@ -344,7 +347,7 @@ Schema: [`status_changes` schema][sc-schema]
 | `event_location` | GeoJSON [Point Feature][geo] | Required | |
 | `battery_pct` | Float | Required if Applicable | Percent battery charge of device, expressed between 0 and 1 |
 | `associated_trip` | UUID | Required if Applicable | Trip UUID (foreign key to Trips API), required if `event_type_reason` is `user_pick_up` or `user_drop_off`, or for any other status change event that marks the end of a trip. |
-| `associated_ticket` | String | Optional | Identifier for an associated ticket inside an Agency-maintained 311 or CRM system. | 
+| `associated_ticket` | String | Optional | Identifier for an associated ticket inside an Agency-maintained 311 or CRM system. |
 
 ### Event Times
 
@@ -358,7 +361,10 @@ The `/status_changes` API should allow querying status changes with the followin
 | --------------- | ------ | --------------- |
 | `event_time` | `YYYY-MM-DDTHH`, an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) extended datetime representing an UTC hour between 00 and 23. | All status changes with an event time occurring within the hour. For example, requesting `event_time=2019-10-01T07` returns all status changes where `2019-10-01T07:00:00 <= status_change.event_time < 2019-10-01T08:00:00` UTC. |
 
-If the data does not exist or the hour has not completed, `/status_changes` shall return a `404 Not Found` error.
+For hours that have not yet completed or during which the provider was not operating
+in a municipality `/status_changes` shall return a `404 Not Found` error.
+`/status_changes` shall return an empty array of status change events for
+hours in which the provider was operating but no events happened.
 
 Without an `event_time` query parameter, `/status_changes` shall return a `400 Bad Request` error.
 
@@ -370,7 +376,7 @@ Without an `event_time` query parameter, `/status_changes` shall return a `400 B
 | | | `user_drop_off` | User ends reservation |
 | | | `rebalance_drop_off` | Device moved for rebalancing |
 | | | `maintenance_drop_off` | Device introduced into service after being removed for maintenance |
-| | | `agency_drop_off` | The administrative agency (ie, DOT) drops a device into the PROW using an admin code or similar | 
+| | | `agency_drop_off` | The administrative agency (ie, DOT) drops a device into the PROW using an admin code or similar |
 | `reserved` | A customer reserves a device (even if trip has not started yet) | `user_pick_up` | Customer reserves device |
 | `unavailable` | A device is on the street but becomes unavailable for customer use | `maintenance` | A device is no longer available due to equipment issues |
 | | | `low_battery` | A device is no longer available due to insufficient battery |
@@ -385,7 +391,7 @@ Without an `event_time` query parameter, `/status_changes` shall return a `400 B
 
 ### GBFS
 
-All MDS compatible `provider` APIs must expose a public [GBFS](https://github.com/NABSA/gbfs) feed as well. Given that GBFS hasn't fully [evolved to support dockless mobility](https://github.com/NABSA/gbfs/pull/92) yet, we follow the current guidelines in making bike information avaliable to the public. 
+All MDS compatible `provider` APIs must expose a public [GBFS](https://github.com/NABSA/gbfs) feed as well. Given that GBFS hasn't fully [evolved to support dockless mobility](https://github.com/NABSA/gbfs/pull/92) yet, we follow the current guidelines in making bike information avaliable to the public.
 
   - `gbfs.json` is always required and must contain a `feeds` property that lists all published feeds
   - `system_information.json` is always required
@@ -404,9 +410,9 @@ Unless stated otherwise by the municipality, this endpoint must return only thos
 
 The schema and datatypes are the same as those defined for [`/status_changes`][status].
 
-Endpoint: `/events`  
-Method: `GET`  
-Schema: [`status_changes` schema][sc-schema]  
+Endpoint: `/events`
+Method: `GET`
+Schema: [`status_changes` schema][sc-schema]
 `data` Payload: `{ "status_changes": [] }`, an array of objects with the same structure as in [`/status_changes`][status]
 
 ### Event Times
