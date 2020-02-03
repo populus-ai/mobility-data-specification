@@ -271,7 +271,16 @@ The `/trips` API should allow querying trips with the following query parameters
 For hours that have not yet completed or during which the provider was not operating
 in a municipality `/trips` shall return a `404 Not Found` error.
 `/trips` shall return an empty array of trips for
-hours in which the provider was operating but no events happened.
+hours in which the provider was operating but no events happened:
+
+```json
+{
+    "version": "x.y.z",
+    "data": {
+        "trips": []
+    }
+}
+```
 
 Without an `end_time` query parameter, `/trips` shall return a `400 Bad Request` error.
 
@@ -364,7 +373,16 @@ The `/status_changes` API should allow querying status changes with the followin
 For hours that have not yet completed or during which the provider was not operating
 in a municipality `/status_changes` shall return a `404 Not Found` error.
 `/status_changes` shall return an empty array of status change events for
-hours in which the provider was operating but no events happened.
+hours in which the provider was operating but no events happened:
+
+```json
+{
+    "version": "x.y.z",
+    "data": {
+        "status_changes": []
+    }
+}
+```
 
 Without an `event_time` query parameter, `/status_changes` shall return a `400 Bad Request` error.
 
